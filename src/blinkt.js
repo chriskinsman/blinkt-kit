@@ -1,6 +1,6 @@
 "use strict";
 
-const rpio = require("rpio");
+const { Chip, Line } = require("node-libgpiod");
 
 const DAT = 23;
 const CLK = 24;
@@ -12,15 +12,23 @@ const DEFAULT_BLUE = 0;
 const DEFAULT_BRIGHTNESS = 0.2;
 const DEFAULT_PIXELS = 8;
 
+function msleep(n) {
+	Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, n);
+}
+
 class Blinkt {
-	constructor({ dat = DAT, clk = CLK, mode = MODE, clearOnExit = false } = {}) {
-		this.dat = dat;
-		this.clk = clk;
+	constructor({ dat = DAT, clk = CLK, clearOnExit = false } = {}) {
+		this.chip = new Chip(4);
+
+		this.dat = new Line(this.chip, dat);
+		this.clk = new Line(this.chip, clk);
 		this.cleanedUp = false;
 
-		rpio.init({ mapping: mode, close_on_exit: false });
-		rpio.open(this.dat, rpio.OUTPUT, rpio.LOW);
-		rpio.open(this.clk, rpio.OUTPUT, rpio.LOW);
+		this.dat.requestOutputMode();
+		this.clk.requestOutputMode();
+
+		this.dat.setValue(0);
+		this.clk.setValue(0);
 
 		this.blinktPixels = Array.from(new Array(DEFAULT_PIXELS), () => [DEFAULT_RED, DEFAULT_GREEN, DEFAULT_BLUE, 0]);
 
@@ -62,10 +70,10 @@ class Blinkt {
 		for (let i = 0; i < times; i++) {
 			this.setBrightness({ pixel, brightness });
 			this.show();
-			rpio.msleep(intervalms);
+			msleep(intervalms);
 			this.setBrightness({ pixel, brightness: 0 });
 			this.show();
-			rpio.msleep(intervalms);
+			msleep(intervalms);
 		}
 	}
 
@@ -78,7 +86,7 @@ class Blinkt {
 			this.setBrightness({ pixel: 3, brightness });
 			this.setBrightness({ pixel: 4, brightness });
 			this.show();
-			rpio.msleep(100);
+			msleep(100);
 		}
 
 		for (let pixel = 2; pixel >= 0; pixel--) {
@@ -86,7 +94,7 @@ class Blinkt {
 			this.setPixel({ pixel, r, g, b });
 			this.setPixel({ pixel: mirrorPixel, r, g, b });
 			this.show();
-			rpio.msleep(250);
+			msleep(250);
 		}
 
 		this.clear();
@@ -96,14 +104,14 @@ class Blinkt {
 	showFinalAnimation({ r, g, b } = {}) {
 		this.setAll({ r, g, b, brightness: 1.0 });
 		this.show();
-		rpio.msleep(50);
+		msleep(50);
 
 		for (let pixel = 0; pixel < 3; pixel++) {
 			let mirrorPixel = 7 - pixel;
 			this.setPixel({ pixel, r: 0, g: 0, b: 0 });
 			this.setPixel({ pixel: mirrorPixel, r: 0, g: 0, b: 0 });
 			this.show();
-			rpio.msleep(250);
+			msleep(250);
 		}
 
 		for (let i = 10; i > 0; i--) {
@@ -111,7 +119,7 @@ class Blinkt {
 			this.setBrightness({ pixel: 3, brightness });
 			this.setBrightness({ pixel: 4, brightness });
 			this.show();
-			rpio.msleep(100);
+			msleep(100);
 		}
 
 		this.clear();
@@ -127,7 +135,6 @@ class Blinkt {
 		if (!this.cleanedUp) {
 			this.cleanedUp = true;
 			this.clear();
-			rpio.exit();
 			process.exit();
 		}
 	}
@@ -140,14 +147,14 @@ class Blinkt {
 	}
 
 	writeData(bit) {
-		rpio.write(this.dat, bit);
-		rpio.write(this.clk, rpio.HIGH);
-		rpio.write(this.clk, rpio.LOW);
+		this.dat.setValue(bit);
+		this.clk.setValue(1);
+		this.clk.setValue(0);
 	}
 
 	writeByte(byte) {
 		for (let i = 0; i < DEFAULT_PIXELS; i++) {
-			const bit = (byte & (1 << (7 - i))) > 0 === true ? rpio.HIGH : rpio.LOW;
+			const bit = (byte & (1 << (7 - i))) > 0 === true ? 1 : 0;
 			this.writeData(bit);
 		}
 	}
