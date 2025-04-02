@@ -2,6 +2,32 @@
 
 Pimoroni Blinkt! NodeJS bindings. Based on node-libgpiod. Updated for Node > 22.
 
+## How to use into your project
+
+First install libgpiod and node development packages, if not installed yet:
+
+### RPM based
+
+```bash
+# fedora
+sudo dnf install libgpiod libgpiod-devel libgpiod-utils nodejs-devel
+```
+
+```bash
+# openSUSE
+sudo zypper in libgpiod libgpiod-devel libgpiod-utils nodejs-devel
+```
+
+### DEB based
+
+```bash
+# debian and its variants
+sudo apt install gpiod libgpiod2 libgpiod-dev libnode-dev
+```
+
+[node-gyp][node-gyp] will do the rest for you.
+
+
 ```sh
 npm install blinkt-kit --save
 ```
