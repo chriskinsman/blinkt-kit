@@ -1,7 +1,7 @@
 {
   "name": "blinkt-kit",
-  "version": "2.2.1",
-  "description": "Pimoroni Blinkt! NodeJS bindings. Based on node-blinkt. Updated for Node > 8.",
+  "version": "2.3.1",
+  "description": "Pimoroni Blinkt! NodeJS bindings. Based on node-libgpiod. Updated for Node > 22.",
   "main": "src/index.js",
   "scripts": {
     "test": "node example/index.js",
