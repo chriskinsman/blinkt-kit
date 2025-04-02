@@ -1,6 +1,6 @@
 # blinkt-kit
 
-Pimoroni Blinkt! NodeJS bindings. Based on node-blinkt. Updated for Node > 8.
+Pimoroni Blinkt! NodeJS bindings. Based on node-libgpiod. Updated for Node > 22.
 
 ```sh
 npm install blinkt-kit --save
